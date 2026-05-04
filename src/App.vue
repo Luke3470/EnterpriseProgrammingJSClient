@@ -50,6 +50,7 @@
 
       <EditBook
           :dialog="dialog"
+          :rules="rules"
           @save="saveDialog"
           @close="dialog.open = false"
       />
@@ -57,7 +58,7 @@
       <Delete
           :delete-dialog="deleteDialog"
           @confirm="executeDelete"
-          @cancel="deleteDialog.open = false"
+          @close="deleteDialog.open = false"
       />
 
       <Snackbar :snackbar="snackbar" />
@@ -83,7 +84,7 @@ const BASE_URL = "http://localhost:8080/EnterpriseProgrammingREST_war/bookAPI"
 
 const EMPTY_FORM = () => ({
   id: "", title: "", author: "", date: "",
-  genres: "", characters: "", synopsis: "", coverUrl: ""
+  genres: "", characters: "", synopsis: "", coverUrl: "https://placehold.co/272x420"
 })
 
 export default {
@@ -134,6 +135,25 @@ export default {
         show: false,
         message: "",
         color: "success"
+      },
+
+      rules: {
+        required: v => !!v || "This field is required",
+
+        max255: v => !v || v.length <= 255 || "Must be 255 characters or less",
+
+        dateRequired: v => !!v || "Date is required (YYYY-MM-DD)",
+
+        dateFormat: v => {
+          if (!v) return true
+          return /^\d{4}-\d{2}-\d{2}$/.test(v) || "Use format YYYY-MM-DD"
+        },
+
+        validDate: v => {
+          if (!v) return true
+          const d = new Date(v)
+          return !isNaN(d.getTime()) || "Invalid date"
+        }
       }
     }
   },
@@ -270,7 +290,11 @@ export default {
     },
 
     async saveDialog() {
+      const result = await this.$refs.form.validate()
+      if (!result.valid) return
+
       this.dialog.saving = true
+
       try {
 
         let payload

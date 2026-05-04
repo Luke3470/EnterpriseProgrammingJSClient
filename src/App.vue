@@ -1,7 +1,11 @@
-<script setup lang="ts">
-import HelloWorld from './components/HelloWorld.vue'
-</script>
-
 <template>
-  <HelloWorld />
+  <v-app>
+    <v-main>
+      <v-container class="text-center">
+        <v-btn color="primary">
+          Vuetify is working 🚀
+        </v-btn>
+      </v-container>
+    </v-main>
+  </v-app>
 </template>

@@ -58,7 +58,7 @@
       <Delete
           :delete-dialog="deleteDialog"
           @confirm="executeDelete"
-          @close="deleteDialog.open = false"
+          @cancel="deleteDialog.open = false"
       />
 
       <Snackbar :snackbar="snackbar" />
@@ -69,7 +69,7 @@
 
 <script>
 import axios from "axios"
-import { XMLParser } from "fast-xml-parser"
+import {XMLBuilder, XMLParser} from "fast-xml-parser"
 import YAML from "js-yaml"
 
 
@@ -79,6 +79,7 @@ import Grid from "./components/Grid.vue";
 import EditBook from "./components/EditBook.vue";
 import Delete from "./components/Delete.vue";
 import Snackbar from "./components/Snackbar.vue";
+import {he} from "vuetify/locale";
 
 const BASE_URL = "http://localhost:8080/EnterpriseProgrammingREST_war/bookAPI"
 
@@ -153,6 +154,17 @@ export default {
           if (!v) return true
           const d = new Date(v)
           return !isNaN(d.getTime()) || "Invalid date"
+        },
+
+        noFutureDate: v => {
+          if (!v) return true
+
+          const today = new Date()
+          today.setHours(0, 0, 0, 0)
+
+          const inputDate = new Date(v)
+
+          return inputDate <= today || "Date cannot be in the future"
         }
       }
     }
@@ -289,12 +301,9 @@ export default {
       }
     },
 
-    async saveDialog() {
-      const result = await this.$refs.form.validate()
-      if (!result.valid) return
+    async saveDialog(basePayload) {
 
       this.dialog.saving = true
-
       try {
 
         let payload
@@ -309,7 +318,7 @@ export default {
         else {
           payload = basePayload
         }
-
+        console.log(this.format)
         if (this.format === "application/json") {
           body = JSON.stringify(payload)
           headers["Content-Type"] = "application/json"
@@ -331,25 +340,28 @@ export default {
         }
 
         else if (this.format === "application/x-yaml") {
-          body = YAML.dump(payload, {
+          body = body = YAML.dump(payload, {
             lineWidth: -1,
-            noRefs: true
+            noRefs: true,
+            skipInvalid: true,
+            forceQuotes: false
           })
 
           headers["Content-Type"] = "application/x-yaml"
           headers["Accept"] = "application/x-yaml"
         }
-
+        console.log(body)
         if (this.dialog.mode === "edit") {
-          await axios.put(`${BASE_URL}`, payload)
+          await axios.put(BASE_URL, body, {headers})
         } else {
-          await axios.post(BASE_URL, payload)
+          await axios.post(BASE_URL, body, {headers})
         }
 
         this.dialog.open = false
         this.loadBooks()
 
       } catch (err) {
+        console.error(err)
         this.dialog.error = err.message
       }
 

@@ -12,7 +12,7 @@
       <v-select
           :model-value="format"
           :items="formats"
-          label="Response Format"
+          label="Data Transfer Format"
           density="comfortable"
           hide-details
           style="max-width:200px"

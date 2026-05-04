@@ -18,7 +18,7 @@
               v-model="dialog.form.date"
               label="Date"
               type="date"
-              :rules="[rules.dateRequired, rules.dateFormat, rules.validDate]"
+              :rules="[rules.dateRequired, rules.dateFormat, rules.validDate, rules.noFutureDate]"
           />
           <v-text-field
               v-model="dialog.form.genres"
@@ -37,7 +37,7 @@
       </v-card-text>
       <v-card-actions>
         <v-btn @click="$emit('close')">Cancel</v-btn>
-        <v-btn @click="$emit('save')" :loading="dialog.saving">
+        <v-btn @click="submit" :loading="dialog.saving">
           Save
         </v-btn>
       </v-card-actions>
@@ -49,5 +49,14 @@
 <script>
 export default {
   props: ["dialog", "rules"],
+  methods: {
+    async submit() {
+      const result = await this.$refs.form.validate()
+
+      if (!result.valid) return
+
+      this.$emit("save", this.dialog.form)
+    }
+  }
 }
 </script>
